@@ -7,6 +7,7 @@
             <thead>
             <tr>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">User Email</th>
+                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Device</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Sync State</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Active Tokens</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Total SMS</th>
@@ -18,6 +19,12 @@
                 <tr>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $device->email }}</td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
+                        {{ $device->device_name ?: 'Unknown device' }}
+                        @if($device->device_model)
+                            <div style="font-size:12px;color:#6b7280;">{{ $device->device_model }}</div>
+                        @endif
+                    </td>
+                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
                         @if($device->sync_enabled)
                             <span style="padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534;">Active</span>
                         @else
@@ -26,10 +33,15 @@
                     </td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $device->active_tokens }}</td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $device->total_messages }}</td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $device->last_sms_timestamp ? $device->last_sms_timestamp : 'N/A' }}</td>
+                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
+                        {{ $device->last_sms_timestamp ? $device->last_sms_timestamp : 'N/A' }}
+                        @if($device->last_seen_at)
+                            <div style="font-size:12px;color:#6b7280;">Seen: {{ $device->last_seen_at }}</div>
+                        @endif
+                    </td>
                 </tr>
             @empty
-                <tr><td style="padding:10px;" colspan="5">No connected devices yet.</td></tr>
+                <tr><td style="padding:10px;" colspan="6">No connected devices yet.</td></tr>
             @endforelse
             </tbody>
         </table>
@@ -41,6 +53,7 @@
             <thead>
             <tr>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Device</th>
+                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Status</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Sender</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Direction</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Timestamp</th>
@@ -50,14 +63,21 @@
             <tbody>
             @forelse($recentMessages as $sms)
                 <tr>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->device_email }}</td>
+                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
+                        {{ $sms->device_name ?: $sms->device_email }}
+                    </td>
+                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
+                        <span style="padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534;">
+                            {{ $sms->sync_status }}
+                        </span>
+                    </td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->sender }}</td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->direction }}</td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->timestamp }}</td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->body }}</td>
                 </tr>
             @empty
-                <tr><td style="padding:10px;" colspan="5">No SMS sync data available.</td></tr>
+                <tr><td style="padding:10px;" colspan="6">No SMS sync data available.</td></tr>
             @endforelse
             </tbody>
         </table>

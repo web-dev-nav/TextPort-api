@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Message;
+use App\Models\SyncEvent;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,6 +31,9 @@ class DashboardController extends Controller
                 'users.id',
                 'users.email',
                 'users.sync_enabled',
+                'users.device_name',
+                'users.device_model',
+                'users.last_seen_at',
                 DB::raw('COUNT(DISTINCT api_tokens.id) as active_tokens'),
                 DB::raw('COUNT(messages.id) as total_messages'),
                 DB::raw('MAX(messages.timestamp) as last_sms_timestamp'),
@@ -46,13 +50,39 @@ class DashboardController extends Controller
                 'messages.body',
                 'messages.timestamp',
                 'messages.direction',
+                'messages.sync_status',
                 'users.email as device_email',
+                'users.device_name as device_name',
             ]);
 
         return view('admin.dashboard', [
             'devices' => $devices,
             'recentMessages' => $recentMessages,
         ]);
+    }
+
+    public function history()
+    {
+        $events = SyncEvent::query()
+            ->join('users', 'users.id', '=', 'sync_events.user_id')
+            ->where('users.is_admin', false)
+            ->orderByDesc('sync_events.created_at')
+            ->limit(500)
+            ->get([
+                'sync_events.id',
+                'sync_events.status',
+                'sync_events.message_count',
+                'sync_events.device_id',
+                'sync_events.device_name',
+                'sync_events.device_model',
+                'sync_events.app_version',
+                'sync_events.error_message',
+                'sync_events.created_at',
+                'sync_events.updated_at',
+                'users.email as user_email',
+            ]);
+
+        return view('admin.history', ['events' => $events]);
     }
 
     public function logs()

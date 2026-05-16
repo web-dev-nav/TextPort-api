@@ -13,6 +13,7 @@ Route::prefix('admin')->group(function (): void {
 
     Route::middleware('admin')->group(function (): void {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+        Route::get('/history', [DashboardController::class, 'history'])->name('admin.history');
         Route::get('/logs', [DashboardController::class, 'logs'])->name('admin.logs');
         Route::post('/logs/delete', [DashboardController::class, 'deleteLogs'])->name('admin.logs.delete');
     });

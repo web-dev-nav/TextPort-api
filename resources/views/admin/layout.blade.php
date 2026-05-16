@@ -35,6 +35,7 @@
         <div class="brand">Navigation</div>
         <nav class="nav">
             <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Connected Devices</a>
+            <a href="{{ route('admin.history') }}" class="{{ request()->routeIs('admin.history') ? 'active' : '' }}">Sync History</a>
             <a href="{{ route('admin.logs') }}" class="{{ request()->routeIs('admin.logs') ? 'active' : '' }}">System Logs</a>
         </nav>
     </aside>
