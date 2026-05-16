@@ -13,6 +13,7 @@
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Active Tokens</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Total SMS</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Last SMS Timestamp</th>
+                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Action</th>
             </tr>
             </thead>
             <tbody>
@@ -54,9 +55,12 @@
                             <div style="font-size:12px;color:#6b7280;">Seen: {{ \Carbon\Carbon::parse($device->last_seen_at)->diffForHumans() }}</div>
                         @endif
                     </td>
+                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
+                        <a href="{{ route('admin.history', ['user_id' => $device->id]) }}" style="display:inline-block;background:#111827;color:#fff;text-decoration:none;border-radius:8px;padding:6px 10px;">Sync History</a>
+                    </td>
                 </tr>
             @empty
-                <tr><td style="padding:10px;" colspan="7">No connected devices yet.</td></tr>
+                <tr><td style="padding:10px;" colspan="8">No connected devices yet.</td></tr>
             @endforelse
             </tbody>
         </table>

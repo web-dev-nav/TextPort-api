@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Message;
-use App\Models\SyncEvent;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -73,29 +72,6 @@ class DashboardController extends Controller
     {
         $selectedUserId = (int) $request->query('user_id', 0);
 
-        $events = SyncEvent::query()
-            ->join('users', 'users.id', '=', 'sync_events.user_id')
-            ->where('users.is_admin', false)
-            ->when($selectedUserId > 0, function ($q) use ($selectedUserId): void {
-                $q->where('users.id', $selectedUserId);
-            })
-            ->orderByDesc('sync_events.created_at')
-            ->limit(500)
-            ->get([
-                'users.id as user_id',
-                'sync_events.id',
-                'sync_events.status',
-                'sync_events.message_count',
-                'sync_events.device_id',
-                'sync_events.device_name',
-                'sync_events.device_model',
-                'sync_events.app_version',
-                'sync_events.error_message',
-                'sync_events.created_at',
-                'sync_events.updated_at',
-                'users.email as user_email',
-            ]);
-
         $devices = User::query()
             ->where('is_admin', false)
             ->orderBy('email')
@@ -121,8 +97,6 @@ class DashboardController extends Controller
             ]);
 
         return view('admin.history', [
-            'events' => $events,
-            'eventsByUser' => $events->groupBy('user_id'),
             'devices' => $devices,
             'smsFeed' => $smsFeed,
             'selectedUserId' => $selectedUserId,
