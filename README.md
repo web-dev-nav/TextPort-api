@@ -10,6 +10,14 @@ php artisan migrate --force
 php artisan serve --host=0.0.0.0 --port=8080
 ```
 
+## Deployment Note
+
+Always run migrations during deployment:
+
+```bash
+php artisan migrate --force
+```
+
 Base URL:
 
 - `http://<your-host>:8080/api/`
