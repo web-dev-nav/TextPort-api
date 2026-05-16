@@ -135,6 +135,17 @@ class DashboardController extends Controller
         return redirect()->route('admin.accounts')->with('status', "Account created. Activation code: {$code}");
     }
 
+    public function deleteAccount(User $user): RedirectResponse
+    {
+        if ($user->is_admin) {
+            return redirect()->route('admin.accounts')->with('status', 'Admin accounts cannot be deleted here.');
+        }
+
+        $user->delete();
+
+        return redirect()->route('admin.accounts')->with('status', 'Device account deleted successfully.');
+    }
+
     public function logs()
     {
         $path = storage_path('logs/laravel.log');

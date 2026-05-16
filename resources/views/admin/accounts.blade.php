@@ -29,6 +29,7 @@
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Activation Status</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Device</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Online State</th>
+                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Action</th>
             </tr>
             </thead>
             <tbody>
@@ -60,9 +61,15 @@
                             <span style="padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#fee2e2;color:#991b1b;">Offline</span>
                         @endif
                     </td>
+                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
+                        <form method="post" action="{{ route('admin.accounts.delete', $a->id) }}" onsubmit="return confirm('Delete this device account and all synced data?');">
+                            @csrf
+                            <button type="submit" style="background:#b91c1c;color:#fff;border:0;border-radius:8px;padding:6px 10px;cursor:pointer;">Delete</button>
+                        </form>
+                    </td>
                 </tr>
             @empty
-                <tr><td style="padding:10px;" colspan="6">No device accounts yet.</td></tr>
+                <tr><td style="padding:10px;" colspan="7">No device accounts yet.</td></tr>
             @endforelse
             </tbody>
         </table>
