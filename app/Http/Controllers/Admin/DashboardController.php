@@ -25,7 +25,14 @@ class DashboardController extends Controller
                     });
             })
             ->leftJoin('messages', 'messages.user_id', '=', 'users.id')
-            ->groupBy('users.id', 'users.email', 'users.sync_enabled')
+            ->groupBy(
+                'users.id',
+                'users.email',
+                'users.sync_enabled',
+                'users.device_name',
+                'users.device_model',
+                'users.last_seen_at'
+            )
             ->orderByDesc(DB::raw('MAX(messages.timestamp)'))
             ->select([
                 'users.id',
