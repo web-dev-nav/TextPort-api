@@ -62,10 +62,29 @@
                         @endif
                     </td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
+                        <button type="button" onclick="toggleDetails('details-{{ $a->id }}')" style="background:#1f2937;color:#fff;border:0;border-radius:8px;padding:6px 10px;cursor:pointer;margin-right:6px;">Details</button>
                         <form method="post" action="{{ route('admin.accounts.delete', $a->id) }}" onsubmit="return confirm('Delete this device account and all synced data?');">
                             @csrf
                             <button type="submit" style="background:#b91c1c;color:#fff;border:0;border-radius:8px;padding:6px 10px;cursor:pointer;">Delete</button>
                         </form>
+                    </td>
+                </tr>
+                <tr id="details-{{ $a->id }}" style="display:none;background:#f9fafb;">
+                    <td colspan="7" style="border-bottom:1px solid #e5e7eb;padding:12px 14px;">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;">
+                            <div><strong>Device Name:</strong> {{ $a->device_name ?: 'N/A' }}</div>
+                            <div><strong>Device Model:</strong> {{ $a->device_model ?: 'N/A' }}</div>
+                            <div><strong>Brand:</strong> {{ $a->device_brand ?: 'N/A' }}</div>
+                            <div><strong>Manufacturer:</strong> {{ $a->device_manufacturer ?: 'N/A' }}</div>
+                            <div><strong>Android Version:</strong> {{ $a->android_version ?: 'N/A' }}</div>
+                            <div><strong>SDK:</strong> {{ $a->sdk_int ?: 'N/A' }}</div>
+                            <div><strong>Hardware:</strong> {{ $a->device_hardware ?: 'N/A' }}</div>
+                            <div><strong>Board:</strong> {{ $a->device_board ?: 'N/A' }}</div>
+                            <div><strong>Product:</strong> {{ $a->device_product ?: 'N/A' }}</div>
+                            <div><strong>Device ID:</strong> {{ $a->device_id ?: 'N/A' }}</div>
+                            <div><strong>Activated At:</strong> {{ $a->activated_at ? $a->activated_at->format('Y-m-d H:i:s') : 'N/A' }}</div>
+                            <div><strong>Last Seen:</strong> {{ $a->last_seen_at ? $a->last_seen_at->format('Y-m-d H:i:s') : 'N/A' }}</div>
+                        </div>
                     </td>
                 </tr>
             @empty
@@ -74,4 +93,11 @@
             </tbody>
         </table>
     </div>
+    <script>
+        function toggleDetails(id) {
+            const row = document.getElementById(id);
+            if (!row) return;
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
 @endsection
