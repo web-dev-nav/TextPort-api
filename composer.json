@@ -73,6 +73,7 @@
         ],
         "deploy": [
             "@php artisan migrate --force --ansi",
+            "@php artisan db:seed --force --class=Database\\\\Seeders\\\\DatabaseSeeder --ansi",
             "@php artisan optimize:clear --ansi",
             "@php artisan config:cache --ansi",
             "@php artisan route:cache --ansi",
