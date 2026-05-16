@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\User;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -50,5 +51,24 @@ class DashboardController extends Controller
             'devices' => $devices,
             'recentMessages' => $recentMessages,
         ]);
+    }
+
+    public function logs()
+    {
+        $path = storage_path('logs/laravel.log');
+        if (! File::exists($path)) {
+            return view('admin.logs', ['logEntries' => []]);
+        }
+
+        $content = File::get($path);
+        $lines = preg_split("/\r\n|\n|\r/", $content) ?: [];
+
+        $errorLines = array_values(array_filter($lines, static function (string $line): bool {
+            return str_contains($line, '.ERROR:') || str_contains($line, 'production.ERROR:') || str_contains($line, 'local.ERROR:');
+        }));
+
+        $entries = array_slice($errorLines, -300);
+
+        return view('admin.logs', ['logEntries' => $entries]);
     }
 }

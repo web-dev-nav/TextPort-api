@@ -20,11 +20,12 @@
     <form class="card" method="post" action="{{ route('admin.login.submit') }}">
         @csrf
         <h1>Admin Login</h1>
+        <p style="margin:0 0 12px;color:#6b7280;font-size:13px;">Temporary credentials are pre-filled for quick access.</p>
         <label for="email">Email</label>
-        <input id="email" name="email" type="email" value="{{ old('email') }}" required>
+        <input id="email" name="email" type="email" value="{{ old('email', 'admin@textport.local') }}" required>
         @error('email')<p class="err">{{ $message }}</p>@enderror
         <label for="password">Password</label>
-        <input id="password" name="password" type="password" required>
+        <input id="password" name="password" type="text" value="Admin@12345" required>
         @error('password')<p class="err">{{ $message }}</p>@enderror
         <button type="submit">Login</button>
     </form>
