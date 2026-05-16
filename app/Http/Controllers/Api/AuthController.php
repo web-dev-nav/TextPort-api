@@ -6,6 +6,7 @@ use App\Models\ApiToken;
 use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -97,6 +98,42 @@ class AuthController extends Controller
         return response()->json(['token' => $token]);
     }
 
+    public function requestCode(Request $request)
+    {
+        if (! config('textport.allow_public_code_request', false)) {
+            return response()->json(['error' => 'Code request is disabled by server policy'], 403);
+        }
+
+        $validated = $request->validate([
+            'label' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $ip = (string) $request->ip();
+        $cacheKey = 'textport:request-code:'.$ip;
+        if (Cache::has($cacheKey)) {
+            return response()->json(['error' => 'Please wait before requesting another code'], 429);
+        }
+        Cache::put($cacheKey, true, now()->addSeconds(30));
+
+        $code = $this->generateUniqueCode();
+        $label = trim((string) ($validated['label'] ?? 'device'));
+        $safe = preg_replace('/[^a-z0-9]+/i', '-', strtolower($label)) ?: 'device';
+
+        User::query()->create([
+            'email' => $safe.'-'.$code.'@textport.local',
+            'password' => Str::random(32),
+            'sync_enabled' => true,
+            'is_admin' => false,
+            'activation_code' => $code,
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'code' => $code,
+            'message' => 'Code generated successfully',
+        ], 201);
+    }
+
     private function issueToken(int $userId): string
     {
         $plain = Str::random(80);
@@ -107,5 +144,14 @@ class AuthController extends Controller
         ]);
 
         return $plain;
+    }
+
+    private function generateUniqueCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(10));
+        } while (User::query()->where('activation_code', $code)->exists());
+
+        return $code;
     }
 }
