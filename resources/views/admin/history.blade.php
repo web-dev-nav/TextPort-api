@@ -19,8 +19,9 @@
             @forelse($events as $event)
                 <tr>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
-                        {{ $event->created_at }}
-                        <div style="font-size:12px;color:#6b7280;">Updated: {{ $event->updated_at }}</div>
+                        {{ \Carbon\Carbon::parse($event->created_at)->format('Y-m-d H:i:s') }}
+                        <div style="font-size:12px;color:#6b7280;">{{ \Carbon\Carbon::parse($event->created_at)->diffForHumans() }}</div>
+                        <div style="font-size:12px;color:#6b7280;">Updated: {{ \Carbon\Carbon::parse($event->updated_at)->format('Y-m-d H:i:s') }}</div>
                     </td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $event->user_email }}</td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">

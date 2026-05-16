@@ -50,6 +50,53 @@ class AuthController extends Controller
         return response()->json(['token' => $token]);
     }
 
+    public function activate(Request $request)
+    {
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:24'],
+            'device_id' => ['required', 'string', 'max:255'],
+            'device_name' => ['nullable', 'string', 'max:255'],
+            'device_model' => ['nullable', 'string', 'max:255'],
+            'device_brand' => ['nullable', 'string', 'max:255'],
+            'device_manufacturer' => ['nullable', 'string', 'max:255'],
+            'android_version' => ['nullable', 'string', 'max:255'],
+            'sdk_int' => ['nullable', 'string', 'max:255'],
+            'device_hardware' => ['nullable', 'string', 'max:255'],
+            'device_board' => ['nullable', 'string', 'max:255'],
+            'device_product' => ['nullable', 'string', 'max:255'],
+            'app_version' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $code = strtoupper(trim($validated['code']));
+        $user = User::query()
+            ->where('activation_code', $code)
+            ->where('is_admin', false)
+            ->first();
+
+        if (! $user) {
+            return response()->json(['error' => 'Invalid activation code'], 404);
+        }
+
+        $user->forceFill([
+            'device_id' => $validated['device_id'],
+            'device_name' => $validated['device_name'] ?? null,
+            'device_model' => $validated['device_model'] ?? null,
+            'device_brand' => $validated['device_brand'] ?? null,
+            'device_manufacturer' => $validated['device_manufacturer'] ?? null,
+            'android_version' => $validated['android_version'] ?? null,
+            'sdk_int' => $validated['sdk_int'] ?? null,
+            'device_hardware' => $validated['device_hardware'] ?? null,
+            'device_board' => $validated['device_board'] ?? null,
+            'device_product' => $validated['device_product'] ?? null,
+            'activated_at' => $user->activated_at ?? now(),
+            'last_seen_at' => now(),
+        ])->save();
+
+        $token = $this->issueToken($user->id);
+
+        return response()->json(['token' => $token]);
+    }
+
     private function issueToken(int $userId): string
     {
         $plain = Str::random(80);

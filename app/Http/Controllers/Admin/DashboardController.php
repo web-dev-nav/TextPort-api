@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -92,6 +93,48 @@ class DashboardController extends Controller
         return view('admin.history', ['events' => $events]);
     }
 
+    public function accounts()
+    {
+        $accounts = User::query()
+            ->where('is_admin', false)
+            ->orderByDesc('created_at')
+            ->limit(500)
+            ->get([
+                'id',
+                'email',
+                'activation_code',
+                'activated_at',
+                'device_name',
+                'device_model',
+                'last_seen_at',
+                'sync_enabled',
+                'created_at',
+            ]);
+
+        return view('admin.accounts', ['accounts' => $accounts]);
+    }
+
+    public function createAccount(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'label' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $code = $this->generateUniqueCode();
+        $label = trim((string)($validated['label'] ?? 'device'));
+        $safe = preg_replace('/[^a-z0-9]+/i', '-', strtolower($label)) ?: 'device';
+
+        User::query()->create([
+            'email' => $safe.'-'.$code.'@textport.local',
+            'password' => Str::random(32),
+            'sync_enabled' => true,
+            'is_admin' => false,
+            'activation_code' => $code,
+        ]);
+
+        return redirect()->route('admin.accounts')->with('status', "Account created. Activation code: {$code}");
+    }
+
     public function logs()
     {
         $path = storage_path('logs/laravel.log');
@@ -153,5 +196,14 @@ class DashboardController extends Controller
         }
 
         return 'other';
+    }
+
+    private function generateUniqueCode(): string
+    {
+        do {
+            $code = strtoupper(Str::random(10));
+        } while (User::query()->where('activation_code', $code)->exists());
+
+        return $code;
     }
 }

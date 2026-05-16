@@ -10,7 +10,25 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['email', 'password', 'sync_enabled', 'is_admin', 'device_id', 'device_name', 'device_model', 'last_seen_at'])]
+#[Fillable([
+    'email',
+    'password',
+    'sync_enabled',
+    'is_admin',
+    'activation_code',
+    'activated_at',
+    'device_id',
+    'device_name',
+    'device_model',
+    'device_brand',
+    'device_manufacturer',
+    'android_version',
+    'sdk_int',
+    'device_hardware',
+    'device_board',
+    'device_product',
+    'last_seen_at',
+])]
 #[Hidden(['password'])]
 class User extends Authenticatable
 {
@@ -28,6 +46,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'sync_enabled' => 'boolean',
             'is_admin' => 'boolean',
+            'activated_at' => 'datetime',
             'last_seen_at' => 'datetime',
         ];
     }
