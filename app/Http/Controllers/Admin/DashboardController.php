@@ -77,16 +77,17 @@ class DashboardController extends Controller
             ->orderBy('email')
             ->get(['id', 'email', 'device_name', 'device_model']);
 
-        $smsFeed = Message::query()
+        $allMessages = Message::query()
             ->join('users', 'users.id', '=', 'messages.user_id')
             ->where('users.is_admin', false)
             ->when($selectedUserId > 0, function ($q) use ($selectedUserId): void {
                 $q->where('users.id', $selectedUserId);
             })
             ->orderByDesc('messages.timestamp')
-            ->limit(300)
+            ->limit(1000)
             ->get([
                 'users.id as user_id',
+                'messages.id as message_id',
                 'messages.sender',
                 'messages.body',
                 'messages.timestamp',
@@ -96,9 +97,25 @@ class DashboardController extends Controller
                 'users.device_name as device_name',
             ]);
 
+        // Group into conversations: one entry per unique (device, sender) pair.
+        // Messages are already sorted DESC so first() gives the latest.
+        $conversations = $allMessages
+            ->groupBy(fn ($m) => $m->user_id . '|' . $m->sender)
+            ->map(fn ($msgs) => (object) [
+                'sender'           => $msgs->first()->sender,
+                'device_name'      => $msgs->first()->device_name,
+                'user_email'       => $msgs->first()->user_email,
+                'message_count'    => $msgs->count(),
+                'latest_timestamp' => $msgs->first()->timestamp,
+                'latest_body'      => $msgs->first()->body,
+                'messages'         => $msgs->reverse()->values(), // oldest-first inside thread
+            ])
+            ->sortByDesc('latest_timestamp')
+            ->values();
+
         return view('admin.history', [
-            'devices' => $devices,
-            'smsFeed' => $smsFeed,
+            'devices'        => $devices,
+            'conversations'  => $conversations,
             'selectedUserId' => $selectedUserId,
         ]);
     }

@@ -21,33 +21,65 @@
 
     <div class="card">
         <h2>Device SMS History Feed</h2>
-        <table style="width:100%;border-collapse:collapse;min-width:1100px;">
-            <thead>
-            <tr>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Device</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">SMS Body</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Status</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Sender</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Direction</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Timestamp</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse($smsFeed as $sms)
-                <tr>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->device_name ?: $sms->user_email }}</td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;max-width:440px;white-space:pre-wrap;word-break:break-word;font-weight:600;">{{ $sms->body }}</td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
-                        <span style="padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534;">{{ $sms->sync_status }}</span>
-                    </td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->sender }}</td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->direction }}</td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ \Carbon\Carbon::createFromTimestampMs((int)$sms->timestamp)->format('Y-m-d H:i:s') }}</td>
-                </tr>
-            @empty
-                <tr><td style="padding:10px;" colspan="6">No SMS messages found for this filter.</td></tr>
-            @endforelse
-            </tbody>
-        </table>
+        <p style="font-size:13px;color:#6b7280;margin:0 0 16px;">
+            {{ $conversations->count() }} conversation{{ $conversations->count() === 1 ? '' : 's' }}
+            &mdash; click any row to expand the full thread.
+        </p>
+
+        @forelse($conversations as $conv)
+            @php
+                $initials = strtoupper(preg_replace('/[^A-Za-z0-9]/', '', substr($conv->sender, -2)));
+                $colors   = ['#6366f1','#8b5cf6','#ec4899','#14b8a6','#f59e0b','#10b981','#3b82f6','#ef4444'];
+                $bg       = $colors[abs(crc32($conv->sender)) % count($colors)];
+            @endphp
+            <details style="border:1px solid #e5e7eb;border-radius:12px;margin-bottom:10px;overflow:hidden;">
+                <summary style="display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;list-style:none;background:#fff;user-select:none;">
+                    {{-- Avatar --}}
+                    <div style="width:42px;height:42px;border-radius:50%;background:{{ $bg }};display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#fff;font-weight:700;font-size:14px;">
+                        {{ $initials ?: '?' }}
+                    </div>
+                    {{-- Main info --}}
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                            <span style="font-weight:700;font-size:15px;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $conv->sender }}</span>
+                            <span style="font-size:12px;color:#9ca3af;white-space:nowrap;">
+                                {{ \Carbon\Carbon::createFromTimestampMs((int)$conv->latest_timestamp)->diffForHumans() }}
+                            </span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:2px;">
+                            <span style="font-size:13px;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px;">{{ $conv->latest_body }}</span>
+                            <span style="background:#f3f4f6;color:#374151;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap;">
+                                {{ $conv->message_count }} msg{{ $conv->message_count === 1 ? '' : 's' }}
+                            </span>
+                        </div>
+                        <div style="font-size:11px;color:#d1d5db;margin-top:2px;">{{ $conv->device_name ?: $conv->user_email }}</div>
+                    </div>
+                    {{-- Expand arrow --}}
+                    <svg style="flex-shrink:0;transition:transform .2s;" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>
+                </summary>
+
+                {{-- Thread messages --}}
+                <div style="background:#f8fafc;border-top:1px solid #e5e7eb;padding:16px 20px;display:flex;flex-direction:column;gap:10px;">
+                    @foreach($conv->messages as $msg)
+                        @php $isSent = $msg->direction === 'outbound'; @endphp
+                        <div style="display:flex;justify-content:{{ $isSent ? 'flex-end' : 'flex-start' }};">
+                            <div style="max-width:72%;background:{{ $isSent ? 'linear-gradient(135deg,#4f46e5,#7c3aed)' : '#fff' }};color:{{ $isSent ? '#fff' : '#111827' }};padding:10px 14px;border-radius:{{ $isSent ? '18px 18px 4px 18px' : '4px 18px 18px 18px' }};box-shadow:0 1px 2px rgba(0,0,0,.06);">
+                                <div style="font-size:14px;line-height:1.5;word-break:break-word;">{{ $msg->body }}</div>
+                                <div style="font-size:11px;margin-top:4px;text-align:right;opacity:.65;">
+                                    {{ \Carbon\Carbon::createFromTimestampMs((int)$msg->timestamp)->format('M j, H:i') }}
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </details>
+        @empty
+            <p style="color:#9ca3af;padding:16px 0;">No SMS conversations found for this filter.</p>
+        @endforelse
     </div>
+
+    <style>
+        details[open] > summary svg { transform: rotate(180deg); }
+        details > summary::-webkit-details-marker { display: none; }
+    </style>
 @endsection
