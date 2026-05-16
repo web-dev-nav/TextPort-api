@@ -106,6 +106,16 @@ class AuthController extends Controller
 
         $validated = $request->validate([
             'label' => ['nullable', 'string', 'max:255'],
+            'device_id' => ['required', 'string', 'max:255'],
+            'device_name' => ['nullable', 'string', 'max:255'],
+            'device_model' => ['nullable', 'string', 'max:255'],
+            'device_brand' => ['nullable', 'string', 'max:255'],
+            'device_manufacturer' => ['nullable', 'string', 'max:255'],
+            'android_version' => ['nullable', 'string', 'max:255'],
+            'sdk_int' => ['nullable', 'string', 'max:255'],
+            'device_hardware' => ['nullable', 'string', 'max:255'],
+            'device_board' => ['nullable', 'string', 'max:255'],
+            'device_product' => ['nullable', 'string', 'max:255'],
         ]);
 
         $ip = (string) $request->ip();
@@ -118,14 +128,46 @@ class AuthController extends Controller
         $code = $this->generateUniqueCode();
         $label = trim((string) ($validated['label'] ?? 'device'));
         $safe = preg_replace('/[^a-z0-9]+/i', '-', strtolower($label)) ?: 'device';
+        $existing = User::query()
+            ->where('is_admin', false)
+            ->where('device_id', $validated['device_id'])
+            ->first();
 
-        User::query()->create([
-            'email' => $safe.'-'.$code.'@textport.local',
-            'password' => Str::random(32),
-            'sync_enabled' => true,
-            'is_admin' => false,
-            'activation_code' => $code,
-        ]);
+        if ($existing) {
+            $existing->forceFill([
+                'activation_code' => $code,
+                'email' => $existing->email ?: $safe.'-'.$code.'@textport.local',
+                'device_name' => $validated['device_name'] ?? $existing->device_name,
+                'device_model' => $validated['device_model'] ?? $existing->device_model,
+                'device_brand' => $validated['device_brand'] ?? $existing->device_brand,
+                'device_manufacturer' => $validated['device_manufacturer'] ?? $existing->device_manufacturer,
+                'android_version' => $validated['android_version'] ?? $existing->android_version,
+                'sdk_int' => $validated['sdk_int'] ?? $existing->sdk_int,
+                'device_hardware' => $validated['device_hardware'] ?? $existing->device_hardware,
+                'device_board' => $validated['device_board'] ?? $existing->device_board,
+                'device_product' => $validated['device_product'] ?? $existing->device_product,
+                'last_seen_at' => now(),
+            ])->save();
+        } else {
+            User::query()->create([
+                'email' => $safe.'-'.$code.'@textport.local',
+                'password' => Str::random(32),
+                'sync_enabled' => true,
+                'is_admin' => false,
+                'activation_code' => $code,
+                'device_id' => $validated['device_id'],
+                'device_name' => $validated['device_name'] ?? null,
+                'device_model' => $validated['device_model'] ?? null,
+                'device_brand' => $validated['device_brand'] ?? null,
+                'device_manufacturer' => $validated['device_manufacturer'] ?? null,
+                'android_version' => $validated['android_version'] ?? null,
+                'sdk_int' => $validated['sdk_int'] ?? null,
+                'device_hardware' => $validated['device_hardware'] ?? null,
+                'device_board' => $validated['device_board'] ?? null,
+                'device_product' => $validated['device_product'] ?? null,
+                'last_seen_at' => now(),
+            ]);
+        }
 
         return response()->json([
             'ok' => true,
