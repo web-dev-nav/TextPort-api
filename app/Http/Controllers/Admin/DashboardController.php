@@ -82,6 +82,7 @@ class DashboardController extends Controller
             ->orderByDesc('sync_events.created_at')
             ->limit(500)
             ->get([
+                'users.id as user_id',
                 'sync_events.id',
                 'sync_events.status',
                 'sync_events.message_count',
@@ -109,6 +110,7 @@ class DashboardController extends Controller
             ->orderByDesc('messages.timestamp')
             ->limit(300)
             ->get([
+                'users.id as user_id',
                 'messages.sender',
                 'messages.body',
                 'messages.timestamp',
@@ -120,6 +122,7 @@ class DashboardController extends Controller
 
         return view('admin.history', [
             'events' => $events,
+            'eventsByUser' => $events->groupBy('user_id'),
             'devices' => $devices,
             'smsFeed' => $smsFeed,
             'selectedUserId' => $selectedUserId,

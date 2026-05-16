@@ -61,9 +61,4 @@
             </tbody>
         </table>
     </div>
-
-    <div class="card">
-        <h2>SMS Synchronization Feed</h2>
-        <p class="muted">Moved to <strong>Sync History</strong> with per-device filtering.</p>
-    </div>
 @endsection

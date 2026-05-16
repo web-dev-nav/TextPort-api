@@ -30,6 +30,7 @@
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Sender</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Direction</th>
                 <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Timestamp</th>
+                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Action</th>
             </tr>
             </thead>
             <tbody>
@@ -43,66 +44,51 @@
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->sender }}</td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->direction }}</td>
                     <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ \Carbon\Carbon::createFromTimestampMs((int)$sms->timestamp)->format('Y-m-d H:i:s') }}</td>
+                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
+                        <button type="button" onclick="toggleDetails('sms-{{ $loop->index }}')" style="background:#1f2937;color:#fff;border:0;border-radius:8px;padding:6px 10px;cursor:pointer;">Details</button>
+                    </td>
+                </tr>
+                <tr id="sms-{{ $loop->index }}" style="display:none;background:#f9fafb;">
+                    <td colspan="7" style="border-bottom:1px solid #e5e7eb;padding:12px 14px;">
+                        <div style="font-weight:700;margin-bottom:6px;">Sync history for this device/account</div>
+                        @php $history = collect($eventsByUser[$sms->user_id] ?? [])->take(8); @endphp
+                        @if($history->isEmpty())
+                            <div style="color:#6b7280;">No sync event history found.</div>
+                        @else
+                            <table style="width:100%;border-collapse:collapse;">
+                                <thead>
+                                <tr>
+                                    <th style="text-align:left;padding:8px;border-bottom:1px solid #d1d5db;">Time</th>
+                                    <th style="text-align:left;padding:8px;border-bottom:1px solid #d1d5db;">Status</th>
+                                    <th style="text-align:left;padding:8px;border-bottom:1px solid #d1d5db;">Messages</th>
+                                    <th style="text-align:left;padding:8px;border-bottom:1px solid #d1d5db;">Error</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                @foreach($history as $h)
+                                    <tr>
+                                        <td style="padding:8px;border-bottom:1px solid #e5e7eb;">{{ \Carbon\Carbon::parse($h->created_at)->format('Y-m-d H:i:s') }}</td>
+                                        <td style="padding:8px;border-bottom:1px solid #e5e7eb;">{{ $h->status }}</td>
+                                        <td style="padding:8px;border-bottom:1px solid #e5e7eb;">{{ $h->message_count }}</td>
+                                        <td style="padding:8px;border-bottom:1px solid #e5e7eb;">{{ $h->error_message ?: '—' }}</td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        @endif
+                    </td>
                 </tr>
             @empty
-                <tr><td style="padding:10px;" colspan="6">No SMS messages found for this filter.</td></tr>
+                <tr><td style="padding:10px;" colspan="7">No SMS messages found for this filter.</td></tr>
             @endforelse
             </tbody>
         </table>
     </div>
-
-    <div class="card">
-        <h2>Sync History</h2>
-        <p class="muted">Recent synchronization jobs with device details, delivery state, and errors.</p>
-        <table style="width:100%;border-collapse:collapse;min-width:1100px;">
-            <thead>
-            <tr>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Time</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Account</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Device</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Messages</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Status</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Error</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse($events as $event)
-                <tr>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
-                        {{ \Carbon\Carbon::parse($event->created_at)->format('Y-m-d H:i:s') }}
-                        <div style="font-size:12px;color:#6b7280;">{{ \Carbon\Carbon::parse($event->created_at)->diffForHumans() }}</div>
-                        <div style="font-size:12px;color:#6b7280;">Updated: {{ \Carbon\Carbon::parse($event->updated_at)->format('Y-m-d H:i:s') }}</div>
-                    </td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $event->user_email }}</td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
-                        {{ $event->device_name ?: 'Unknown device' }}
-                        <div style="font-size:12px;color:#6b7280;">{{ $event->device_model ?: 'N/A' }}</div>
-                        <div style="font-size:12px;color:#6b7280;">ID: {{ $event->device_id ?: 'N/A' }}</div>
-                        <div style="font-size:12px;color:#6b7280;">App: {{ $event->app_version ?: 'N/A' }}</div>
-                    </td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $event->message_count }}</td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
-                        @php
-                            $status = strtolower((string)$event->status);
-                            $badge = match ($status) {
-                                'synced' => ['bg' => '#dcfce7', 'fg' => '#166534'],
-                                'queued' => ['bg' => '#fef3c7', 'fg' => '#92400e'],
-                                'failed' => ['bg' => '#fee2e2', 'fg' => '#991b1b'],
-                                default => ['bg' => '#e5e7eb', 'fg' => '#374151'],
-                            };
-                        @endphp
-                        <span style="padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;background:{{ $badge['bg'] }};color:{{ $badge['fg'] }};">
-                            {{ $event->status }}
-                        </span>
-                    </td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
-                        {{ $event->error_message ?: '—' }}
-                    </td>
-                </tr>
-            @empty
-                <tr><td style="padding:10px;" colspan="6">No sync history yet.</td></tr>
-            @endforelse
-            </tbody>
-        </table>
-    </div>
+    <script>
+        function toggleDetails(id) {
+            const row = document.getElementById(id);
+            if (!row) return;
+            row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+        }
+    </script>
 @endsection
