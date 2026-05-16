@@ -69,11 +69,16 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function history()
+    public function history(Request $request)
     {
+        $selectedUserId = (int) $request->query('user_id', 0);
+
         $events = SyncEvent::query()
             ->join('users', 'users.id', '=', 'sync_events.user_id')
             ->where('users.is_admin', false)
+            ->when($selectedUserId > 0, function ($q) use ($selectedUserId): void {
+                $q->where('users.id', $selectedUserId);
+            })
             ->orderByDesc('sync_events.created_at')
             ->limit(500)
             ->get([
@@ -90,7 +95,35 @@ class DashboardController extends Controller
                 'users.email as user_email',
             ]);
 
-        return view('admin.history', ['events' => $events]);
+        $devices = User::query()
+            ->where('is_admin', false)
+            ->orderBy('email')
+            ->get(['id', 'email', 'device_name', 'device_model']);
+
+        $smsFeed = Message::query()
+            ->join('users', 'users.id', '=', 'messages.user_id')
+            ->where('users.is_admin', false)
+            ->when($selectedUserId > 0, function ($q) use ($selectedUserId): void {
+                $q->where('users.id', $selectedUserId);
+            })
+            ->orderByDesc('messages.timestamp')
+            ->limit(300)
+            ->get([
+                'messages.sender',
+                'messages.body',
+                'messages.timestamp',
+                'messages.direction',
+                'messages.sync_status',
+                'users.email as user_email',
+                'users.device_name as device_name',
+            ]);
+
+        return view('admin.history', [
+            'events' => $events,
+            'devices' => $devices,
+            'smsFeed' => $smsFeed,
+            'selectedUserId' => $selectedUserId,
+        ]);
     }
 
     public function accounts()

@@ -64,39 +64,6 @@
 
     <div class="card">
         <h2>SMS Synchronization Feed</h2>
-        <table style="width:100%;border-collapse:collapse;min-width:760px;">
-            <thead>
-            <tr>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Device</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">SMS Body</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Status</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Sender</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Direction</th>
-                <th style="border-bottom:1px solid #e5e7eb;text-align:left;padding:10px;background:#f3f4f6;">Timestamp</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse($recentMessages as $sms)
-                <tr>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
-                        {{ $sms->device_name ?: $sms->device_email }}
-                    </td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;max-width:440px;white-space:pre-wrap;word-break:break-word;font-weight:600;">
-                        {{ $sms->body }}
-                    </td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">
-                        <span style="padding:3px 8px;border-radius:999px;font-size:12px;font-weight:700;background:#dcfce7;color:#166534;">
-                            {{ $sms->sync_status }}
-                        </span>
-                    </td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->sender }}</td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ $sms->direction }}</td>
-                    <td style="border-bottom:1px solid #e5e7eb;padding:10px;">{{ \Carbon\Carbon::createFromTimestampMs((int)$sms->timestamp)->format('Y-m-d H:i:s') }}</td>
-                </tr>
-            @empty
-                <tr><td style="padding:10px;" colspan="6">No SMS sync data available.</td></tr>
-            @endforelse
-            </tbody>
-        </table>
+        <p class="muted">Moved to <strong>Sync History</strong> with per-device filtering.</p>
     </div>
 @endsection
